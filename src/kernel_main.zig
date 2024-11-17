@@ -2,6 +2,7 @@ const std = @import("std");
 const term = @import("term.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
+const apic = @import("apic.zig");
 
 pub fn panic(
     message: []const u8,
@@ -22,6 +23,7 @@ export fn kernel_main() callconv(.C) void {
 
     gdt.init();
     idt.init();
+    apic.init();
 
     // x86: Enable interrupts and halt
     asm volatile (

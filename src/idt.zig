@@ -1,3 +1,6 @@
+// Chapter 7: Interrupt and exception handling
+// Intel 64 and IA-32 Software Developer Manual, Vol 3, Oct 2024
+
 const std = @import("std");
 
 const gdt = @import("gdt.zig");
