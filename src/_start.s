@@ -10,6 +10,7 @@ stack_top:
 _start:
     // Setup stack
     mov $stack_top, %esp
+    push %ebx // Multiboot info
     call kernel_main
     cli
  1: hlt

@@ -101,6 +101,8 @@ pub fn init() void {
     idt[21] = makeIsr(21, "Control Protection Exception");
     // idt[22] - idt[31] Intel reserved
 
+    idt[255] = makeIsr(255, "Spurious");
+
     idtr.base = @intFromPtr(&idt);
     asm volatile ("lidt (%eax)"
         :

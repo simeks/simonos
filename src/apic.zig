@@ -3,7 +3,7 @@
 //
 // Uses APIC as opposed to the legacy(?) 8259 PIC.
 //
-// The local APIC (one per CPU) two primary functions:
+// The local APIC two primary functions:
 // * Receiving interrupts from internal sources and external I/O APIC (or other)
 // * Send and receive interprocessor interrupt (IPI) messages on MP systems.
 //
@@ -16,7 +16,7 @@
 // * Thermal sensor interrupts
 // * APIC internal error interrupts
 //
-// The external I/O APIC (part of Intel system chipset) has the primary function]
+// The external I/O APIC (part of Intel system chipset) has the primary function
 // of receiving external interrupts from I/O devices, relaying them to local APIC.
 //
 // As interrupts are sent to its processor core, the processor uses the interrupt
@@ -25,7 +25,7 @@
 const arch = @import("arch.zig");
 const term = @import("term.zig");
 
-var apic_base: u32 = undefined;
+var lapic_base: u32 = undefined;
 
 // APIC registers are memory-mapped starting at APIC base.
 // The registers are of various widths but aligned on 128-bit boundaries.
@@ -33,19 +33,25 @@ var apic_base: u32 = undefined;
 
 // Offset bye offsets for APIC registers.
 // Spurious Interrupt Vector Register, Read/Write
-const APIC_SPURIOUS_OFFSET = 0xF0;
+const APIC_SPURIOUS = 0xF0;
+const APIC_LVT_LINT0 = 0x350;
+const APIC_LVT_LINT1 = 0x360;
 
 /// Read from local APIC register
-pub fn apicRead(reg: u32) u32 {
-    const src: *u32 = @ptrFromInt(apic_base + reg);
+fn lapicRead(reg: u32) u32 {
+    const src: *u32 = @ptrFromInt(lapic_base + reg);
     return src.*;
 }
 
 /// Write to local APIC register
-pub fn apicWrite(reg: u32, value: u32) void {
-    const dest: *u32 = @ptrFromInt(apic_base + reg);
+fn lapicWrite(reg: u32, value: u32) void {
+    const dest: *u32 = @ptrFromInt(lapic_base + reg);
     dest.* = value;
 }
+//
+// fn ioapicRead() u32 {
+//     const ptr: *volatile u32 = @ptrFromInt();
+// }
 
 pub fn init() void {
     term.print("Init PIC... ", .{});
@@ -67,12 +73,14 @@ pub fn init() void {
 
     // Get APIC base address
     // TODO: OsDev suggets remapping the registers
-    apic_base = @truncate(apic_base_msr & 0xFFFFF000);
+    lapic_base = @truncate(apic_base_msr & 0xFFFFF000);
 
     // Set spurious interrupt vector bit
-    apicWrite(APIC_SPURIOUS_OFFSET, apicRead(APIC_SPURIOUS_OFFSET) | 0x100);
+    // Sets vector to 0xFF
+    lapicWrite(APIC_SPURIOUS, lapicRead(APIC_SPURIOUS) | 0x1FF);
 
-    term.print("APIC_BASE {x}\n", .{apic_base});
+    asm volatile ("sti");
+    // @breakpoint();
 
     term.print("Done!\n", .{});
 }
